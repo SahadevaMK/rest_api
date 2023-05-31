@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:rest_api/model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as https;
 
@@ -11,7 +11,7 @@ class ApiPage extends StatefulWidget {
 }
 
 class _ApiPageState extends State<ApiPage> {
-  List<dynamic> users = [];
+  List<User> users = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,21 +21,18 @@ class _ApiPageState extends State<ApiPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: fetchData,
-        backgroundColor: Colors.black12,
+        backgroundColor: Colors.white,
       ),
       body: ListView.builder(
         itemCount: users.length,
           itemBuilder: (context, index){
             final user = users[index];
-            final email = user['email'];
-            final name = user['name']['first'];
-            final imageUrl = user['picture']['thumbnail'];
+            final email = user.name.first;
+            // final color = user.gender == 'male'? Colors.blue:Colors.red;
+            final pass = user.phone;
            return ListTile(
-             leading: CircleAvatar(
-               child: ClipRRect(child: Image.network(imageUrl),borderRadius: BorderRadius.circular(100),),
-             ),
-             subtitle: Text(email),
-             title: Text(name),
+             title: Text(email),
+             subtitle: Text(pass),
            );
           }
       ),
@@ -49,8 +46,25 @@ class _ApiPageState extends State<ApiPage> {
     final response = await https.get(uri);
     final body = response.body;
     final jsonBody = jsonDecode(body);
+    final results = jsonBody['results'] as List<dynamic>;
+
+    final transformed = results.map((users){
+      final Name = UserName(
+          title: users['name']['title'],
+          first: users['name']['first'],
+          last: users['name']['last'],
+      );
+      return User(
+          gender: users['gender'],
+          email: users['email'],
+          phone: users['phone'],
+          cell: users['cell'],
+          nat: users['nat'],
+          name: Name,
+      );
+    }).toList();
     setState(() {
-      users = jsonBody['results'];
+      users = transformed;
     });
     print('fetch user completed');
   }
